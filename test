@@ -24,20 +24,20 @@ end
 
 local Themes = {
 	DarkTheme = {
-	Primary       = Color3.fromRGB(255, 255, 255),
-	Secondary     = Color3.fromRGB(200, 200, 200),
-	Window1       = Color3.fromRGB(10, 10, 10),
-	Window2       = Color3.fromRGB(15, 15, 15),
-	Window3       = Color3.fromRGB(20, 20, 20),
-	Button1       = Color3.fromRGB(25, 25, 25),
-	Button2       = Color3.fromRGB(35, 35, 35),
-	Button3       = Color3.fromRGB(45, 45, 45),
-	Stroke        = Color3.fromRGB(60, 60, 60),
-	StrokeHover   = Color3.fromRGB(120, 120, 120),
-	TextPrimary   = Color3.fromRGB(255, 255, 255),
-	TextDim       = Color3.fromRGB(150, 150, 150),
-	SchemeColor   = Color3.fromRGB(255, 255, 255),
-    },
+		Primary       = Color3.fromRGB(38, 233, 195),
+		Secondary     = Color3.fromRGB(233, 38, 115),
+		Window1       = Color3.fromRGB(18, 18, 20),
+		Window2       = Color3.fromRGB(11, 11, 13),
+		Window3       = Color3.fromRGB(15, 15, 17),
+		Button1       = Color3.fromRGB(20, 20, 22),
+		Button2       = Color3.fromRGB(28, 28, 30),
+		Button3       = Color3.fromRGB(40, 40, 42),
+		Stroke        = Color3.fromRGB(45, 45, 48),
+		StrokeHover   = Color3.fromRGB(75, 75, 78),
+		TextPrimary   = Color3.fromRGB(255, 255, 255),
+		TextDim       = Color3.fromRGB(140, 140, 145),
+		SchemeColor   = Color3.fromRGB(38, 233, 195),
+	},
 	HalloweenTheme = {
 		Primary       = Color3.fromRGB(245, 73, 39),
 		Secondary     = Color3.fromRGB(233, 150, 38),
@@ -531,22 +531,151 @@ function SimpleKavo.CreateLib(title, themeName)
 	local tabsOrder = {}
 	local currentTab = nil
 
+	local function updateElementTheme(element, newT)
+		if not element then return end
+		
+		local className = element.ClassName
+		
+		if className == "Frame" then
+			if element.Name == "Main" then
+				element.BackgroundColor3 = newT.Window2
+			elseif element.Name == "Header" then
+				element.BackgroundColor3 = newT.Window1
+			elseif element.Name == "SideBar" then
+				element.BackgroundColor3 = newT.Window3
+			elseif element.Name == "Content" then
+				element.BackgroundColor3 = newT.Window2
+			elseif element.Name == "SectionFrame" or (element.Parent and element.Parent.Name:find("_Section")) then
+				if element.Name == "TitleBar" then
+					element.BackgroundColor3 = newT.Window3
+				else
+					element.BackgroundColor3 = newT.Window2
+				end
+			end
+		elseif className == "TextLabel" then
+			if element.Name == "Label" or element.Name == "Value" or element.Name == "Hotkey" then
+				if element.TextColor3 ~= newT.TextPrimary and element.TextColor3 ~= newT.TextDim then
+					if element.TextColor3 == T.TextPrimary then
+						element.TextColor3 = newT.TextPrimary
+					elseif element.TextColor3 == T.TextDim then
+						element.TextColor3 = newT.TextDim
+					end
+				end
+			elseif element.Name == "Label" or element.Name == "Description" then
+				element.TextColor3 = newT.TextPrimary
+			elseif element.Name == "Description" then
+				element.TextColor3 = newT.TextDim
+			end
+		elseif className == "TextButton" then
+			if element.Name == "KeybindBtn" then
+				element.BackgroundColor3 = newT.Button1
+				element.TextColor3 = newT.TextDim
+			elseif element.Name == "Toggle" or element.Name == "Button" then
+				local parentFrame = element.Parent
+				if parentFrame and parentFrame.Name == "Toggle" then
+				else
+					element.BackgroundColor3 = newT.Button1
+				end
+			elseif element.Name == "MainButton" then
+				element.BackgroundColor3 = newT.Button1
+			elseif element:IsA("TextButton") and element.Parent and element.Parent.Parent and element.Parent.Parent.Name == "OptionsFrame" then
+				element.BackgroundColor3 = newT.Button1
+				element.TextColor3 = newT.TextPrimary
+			end
+		elseif className == "UIStroke" then
+			if element.Color == T.Stroke or element.Color == T.StrokeHover then
+				if element.Parent and (element.Parent.Name == "Toggle" or element.Parent.Name == "Button") then
+				else
+					element.Color = newT.Stroke
+				end
+			end
+		elseif className == "UIGradient" then
+			if element == TrimGradient then
+				element.Color = ColorSequence.new(newT.Primary, newT.Secondary)
+			elseif element.Parent and element.Parent.Name == "Fill" then
+			end
+		elseif className == "ImageLabel" then
+			if element.Name == "Icon" then
+				element.ImageColor3 = newT.Primary
+			elseif element.Name == "Arrow" then
+				element.ImageColor3 = newT.Secondary
+			end
+		end
+	end
+
 	local function updateTheme(newThemeName)
-		if not Themes[newThemeName] then return end
-		T = Themes[newThemeName]
-		Main.BackgroundColor3 = T.Window2
-		Header.BackgroundColor3 = T.Window1
-		SideBar.BackgroundColor3 = T.Window3
-		Content.BackgroundColor3 = T.Window2
-		Title.TextColor3 = T.TextPrimary
-		WindowIcon.ImageColor3 = T.Primary
-		TrimGradient.Color = ColorSequence.new(T.Primary, T.Secondary)
-		KeybindBtn.TextColor3 = T.TextDim
-		KeybindBtn.BackgroundColor3 = T.Button1
-		MainStroke.Color = T.Stroke
-		HeaderStroke.Color = T.Stroke
-		SideBarStroke.Color = T.Stroke
-		ContentStroke.Color = T.Stroke
+		if not Themes[newThemeName] then 
+			warn("[SimpleKavo] Tema '" .. tostring(newThemeName) .. "' não encontrado!")
+			return 
+		end
+		
+		local newT = Themes[newThemeName]
+		
+		Main.BackgroundColor3 = newT.Window2
+		Header.BackgroundColor3 = newT.Window1
+		SideBar.BackgroundColor3 = newT.Window3
+		Content.BackgroundColor3 = newT.Window2
+		Title.TextColor3 = newT.TextPrimary
+		WindowIcon.ImageColor3 = newT.Primary
+		TrimGradient.Color = ColorSequence.new(newT.Primary, newT.Secondary)
+		KeybindBtn.TextColor3 = newT.TextDim
+		KeybindBtn.BackgroundColor3 = newT.Button1
+		MainStroke.Color = newT.Stroke
+		HeaderStroke.Color = newT.Stroke
+		SideBarStroke.Color = newT.Stroke
+		ContentStroke.Color = newT.Stroke
+		
+		for _, tabData in ipairs(tabsOrder) do
+			tabData.button.BackgroundColor3 = newT.Button1
+			tabData.button.TextColor3 = newT.TextPrimary
+			if tabData.stroke then
+				tabData.stroke.Color = newT.Stroke
+			end
+			
+			if currentTab == tabData.button then
+				tabData.button.BackgroundColor3 = newT.Button3
+				tabData.button.TextColor3 = newT.Primary
+				if tabData.stroke then
+					tabData.stroke.Color = newT.StrokeHover
+				end
+			end
+			
+			local content = tabData.content
+			if content then
+				for _, section in ipairs(content:GetChildren()) do
+					if section:IsA("Frame") and section.Name:find("_Section") then
+						local titleBar = section:FindFirstChild("TitleBar")
+						if titleBar then
+							titleBar.BackgroundColor3 = newT.Window3
+							local titleLabel = titleBar:FindFirstChild("Label")
+							if titleLabel then
+								titleLabel.TextColor3 = newT.TextPrimary
+							end
+							local trim = titleBar:FindFirstChild("Trim")
+							if trim then
+								local grad = trim:FindFirstChildOfClass("UIGradient")
+								if grad then
+									grad.Color = ColorSequence.new(newT.Primary, newT.Secondary)
+								end
+							end
+						end
+						
+						local sectionContent = section:FindFirstChild("Content")
+						if sectionContent then
+							for _, control in ipairs(sectionContent:GetChildren()) do
+								if control:IsA("Frame") then
+									for _, child in ipairs(control:GetDescendants()) do
+										updateElementTheme(child, newT)
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+		
+		T = newT
 	end
 
 	function SimpleKavo:AddTab(name)
@@ -612,7 +741,9 @@ function SimpleKavo.CreateLib(title, themeName)
 			for _, tab in ipairs(tabsOrder) do
 				tab.content.Visible = false
 				Tween(tab.button, { BackgroundColor3 = T.Button1, TextColor3 = T.TextPrimary }, 0.2, 2)
-				Tween(tab.stroke, { Color = T.Stroke }, 0.2, 2)
+				if tab.stroke then
+					Tween(tab.stroke, { Color = T.Stroke }, 0.2, 2)
+				end
 			end
 			TabContent.Visible = true
 			Tween(TabButton, { BackgroundColor3 = T.Button3, TextColor3 = T.Primary }, 0.2, 2)
@@ -809,7 +940,7 @@ function SimpleKavo.CreateLib(title, themeName)
 					DescLabel.Name = "Description"
 					DescLabel.Parent = ControlFrame
 					DescLabel.BackgroundTransparency = 1
-					DescLabel.Position = UDim2.new(0, 6, 0, -1)
+					DescLabel.Position = UDim2.new(0, 6, 0, 20)
 					DescLabel.Size = UDim2.new(1, -20, 0, 12)
 					DescLabel.Font = Enum.Font.SourceSans
 					DescLabel.Text = description
@@ -2325,9 +2456,7 @@ function SimpleKavo.CreateLib(title, themeName)
 				Main.Visible = true
 			end
 		end,
-		ChangeTheme = function(newThemeName)
-			updateTheme(newThemeName)
-		end,
+		ChangeTheme = updateTheme,
 	}
 end
 
