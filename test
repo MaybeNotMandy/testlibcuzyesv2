@@ -28,7 +28,7 @@ local Themes = {
 		Secondary     = Color3.fromRGB(255, 255, 255),
 		Window1       = Color3.fromRGB(0, 0, 0),
 		Window2       = Color3.fromRGB(0, 0, 0),
-		Window3       = Color3.fromRGB(0, 0, 0), --38, 233, 195
+		Window3       = Color3.fromRGB(0, 0, 0),
 		Button1       = Color3.fromRGB(20, 20, 22),
 		Button2       = Color3.fromRGB(78, 78, 78),
 		Button3       = Color3.fromRGB(110, 110, 110),
@@ -99,7 +99,6 @@ local function StringToKeyCode(str)
 	local alias = {
 		["ALT"] = "LeftAlt", ["CTRL"] = "LeftControl",
 		["CONTROL"] = "LeftControl", ["SHIFT"] = "LeftShift",
-		["MOUSE1"] = "Mouse1", ["MOUSE2"] = "Mouse2",
 	}
 	local upper = string.upper(str)
 	if alias[upper] then str = alias[upper] end
@@ -533,9 +532,9 @@ function SimpleKavo.CreateLib(title, themeName)
 
 	local function updateElementTheme(element, newT)
 		if not element then return end
-		
+
 		local className = element.ClassName
-		
+
 		if className == "Frame" then
 			if element.Name == "Main" then
 				element.BackgroundColor3 = newT.Window2
@@ -604,13 +603,13 @@ function SimpleKavo.CreateLib(title, themeName)
 	end
 
 	local function updateTheme(newThemeName)
-		if not Themes[newThemeName] then 
+		if not Themes[newThemeName] then
 			warn("[SimpleKavo] Tema '" .. tostring(newThemeName) .. "' não encontrado!")
-			return 
+			return
 		end
-		
+
 		local newT = Themes[newThemeName]
-		
+
 		Main.BackgroundColor3 = newT.Window2
 		Header.BackgroundColor3 = newT.Window1
 		SideBar.BackgroundColor3 = newT.Window3
@@ -624,14 +623,14 @@ function SimpleKavo.CreateLib(title, themeName)
 		HeaderStroke.Color = newT.Stroke
 		SideBarStroke.Color = newT.Stroke
 		ContentStroke.Color = newT.Stroke
-		
+
 		for _, tabData in ipairs(tabsOrder) do
 			tabData.button.BackgroundColor3 = newT.Button1
 			tabData.button.TextColor3 = newT.TextPrimary
 			if tabData.stroke then
 				tabData.stroke.Color = newT.Stroke
 			end
-			
+
 			if currentTab == tabData.button then
 				tabData.button.BackgroundColor3 = newT.Button3
 				tabData.button.TextColor3 = newT.Primary
@@ -639,7 +638,7 @@ function SimpleKavo.CreateLib(title, themeName)
 					tabData.stroke.Color = newT.StrokeHover
 				end
 			end
-			
+
 			local content = tabData.content
 			if content then
 				for _, section in ipairs(content:GetChildren()) do
@@ -659,7 +658,7 @@ function SimpleKavo.CreateLib(title, themeName)
 								end
 							end
 						end
-						
+
 						local sectionContent = section:FindFirstChild("Content")
 						if sectionContent then
 							for _, control in ipairs(sectionContent:GetChildren()) do
@@ -674,7 +673,7 @@ function SimpleKavo.CreateLib(title, themeName)
 				end
 			end
 		end
-		
+
 		T = newT
 	end
 
@@ -2395,22 +2394,15 @@ function SimpleKavo.CreateLib(title, themeName)
 
 				local inputConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
 					if listening and not gameProcessed then
-						local newKey
-						if input.UserInputType == Enum.UserInputType.Keyboard then
-							newKey = input.KeyCode
-						elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
-							newKey = Enum.KeyCode.Mouse1
-						elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
-							newKey = Enum.KeyCode.Mouse2
-						else
-							newKey = Enum.KeyCode.Unknown
-						end
+						if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+						local newKey = input.KeyCode
+						if newKey == Enum.KeyCode.Unknown then return end
 						currentKey = newKey
-						KBDisplay.Text = ("[%s]"):format(newKey.Name ~= "Unknown" and newKey.Name or "None")
+						KBDisplay.Text = ("[%s]"):format(newKey.Name)
 						Tween(KBDisplay, { TextColor3 = focused and T.TextPrimary or T.TextDim }, 0.2, 2)
 						listening = false
 						if callback then callback(currentKey) end
-					elseif not gameProcessed and input.KeyCode == currentKey then
+					elseif not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
 						if callback and not listening then callback(currentKey) end
 					end
 				end)
